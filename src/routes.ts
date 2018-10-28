@@ -1,69 +1,60 @@
-import { spawn } from 'child_process'
-import crypto from 'crypto'
-import fs from 'fs'
 import Koa from 'koa'
 import Router from 'koa-router'
-import path, { resolve } from 'path'
-import rimraf from 'rimraf'
 import { config } from './config'
+import { CLIRequestBody, CLIResponse, CLIResponseType } from './models/cli'
+import { authUser } from './user'
 
-const baseContentDir = '/var/www/vanatu_deployed'
 const router = new Router()
 
+router.get('/', (ctx: Koa.Context) => console.log('foo'))
+
 router.post('/', async (ctx: Koa.Context) => {
-    const payload = JSON.stringify(ctx.request.body)
+  const { body } = ctx.request
+  const { response } = ctx
 
-    const hmac = crypto.createHmac('sha1', config.hubSecret)
-    const digest = 'sha1=' + hmac.update(payload).digest('hex')
-    const checksum = ctx.request.headers[config.hubHeader]
-    console.log('digest:', digest)
-    console.log('checksum:', checksum)
+  if (!body || typeof body !== 'object') {
+    response.status = 412
+    return
+  }
 
-    if (!checksum || !digest || checksum !== digest) {
-        ctx.status = 403
-        ctx.body = 'Checksums did not match!'
-        console.warn('Bad Checksum from GH')
-        return
-    }
+  const { input } = body as CLIRequestBody
 
-    console.info('Checksum confirmed 👍')
-    ctx.status = 200
+  if (!input) {
+    response.status = 409
+    return
+  }
 
-    const sshURL = (ctx.request.body as any).repository.ssh_url
-    const name = (ctx.request.body as any).repository.name
-    console.log('Going to clone ', name, ' from ', sshURL)
+  response.status = 200
 
-    const targetDir = path.join(baseContentDir, name)
-    console.log('Removing directory: ', targetDir)
-    rimraf.sync(targetDir)
+  let content: CLIResponse['content'] = ['> Wat?  \n']
+  let type: CLIResponse['type'] = CLIResponseType.Info
+  const [command, ...args] = input.split(' ')
 
-    console.log('Creating directory: ', targetDir)
-    fs.mkdirSync(targetDir)
+  switch (command.toLowerCase()) {
+    case 'ls':
+      type = CLIResponseType.Info
+      content = [
+        '-= PUBLICLY AVAILABLE COMMANDS =-  ',
+        '> type a command and --help for more info  ',
+        '[ login read post cv ]  '
+      ]
+      break
+    case 'login':
+      const username = args[0]
+      if (!username) {
+        type = CLIResponseType.Error
+        content = ['> Might help to tell me who you are... ']
+      } else if (username === 'ahmad') {
+        type = CLIResponseType.Success
+        content = ['> Hey dude!  ']
+      } else {
+        ({ type, content } = await authUser(username, ctx))
+      }
+      break
+    default:
+  }
 
-    console.log('Cloning')
-    const child = spawn(
-        'git', ['clone', sshURL, targetDir],
-        { stdio: 'inherit' },
-        )
-
-    try {
-        await new Promise((res, rej) => {
-            child.on('exit', () => {
-                res()
-            })
-
-            child.on('error', (err) => {
-                console.error('Bad stuff happened: ', err)
-                rej()
-            })
-        })
-
-    } catch (err) {
-        ctx.status = 500
-        return
-    }
-
-    console.log('Repo Delivered...I think!')
+  response.body = JSON.stringify({ content, type })
 })
 
 export const routes = router.routes()
