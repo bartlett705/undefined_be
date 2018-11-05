@@ -27,5 +27,6 @@ export const config = {
   dynamoSecret: process.env.DYNAMO_SECRET,
   logLevel: 4,
   port: process.env.PORT || 7331,
-  prettyPrint: true
+  prettyPrint: true,
+  weatherAPIKey: process.env.WEATHER_API_KEY
 }

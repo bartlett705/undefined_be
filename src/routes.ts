@@ -3,6 +3,7 @@ import Router from 'koa-router'
 import { addPost } from './messages'
 import { CLIRequestBody, CLIResponse, CLIResponseType } from './models/cli'
 import { authUser, getUser } from './user'
+import { getWeather } from './weather'
 
 const router = new Router()
 
@@ -31,12 +32,11 @@ router.post('/', async (ctx: Koa.Context) => {
   const [command, ...args] = input.split(' ')
 
   switch (command.toLowerCase()) {
-    case 'ls':
+    case 'help':
       type = CLIResponseType.Info
       content = [
         '-= PUBLICLY AVAILABLE COMMANDS =-  ',
-        '> type a command and --help for more info  ',
-        '[ login read post cv ]  '
+        '  [ log(in|out) read post cv ]  '
       ]
       break
     case 'login':
@@ -48,7 +48,7 @@ router.post('/', async (ctx: Koa.Context) => {
         type = CLIResponseType.Success
         content = ['> Hey dude!  ']
       } else {
-        ({ type, content } = await authUser(username, ctx))
+        ;({ type, content } = await authUser(username, ctx))
       }
       break
     case 'logout':
@@ -66,7 +66,7 @@ router.post('/', async (ctx: Koa.Context) => {
     case 'post':
       const user = await getUser(ctx)
       if (!user) {
-        (content = ['You must be logged in to post.  ']),
+        ;(content = ['You must be logged in to post.  ']),
           (type = CLIResponseType.Error)
         break
       }
@@ -75,8 +75,10 @@ router.post('/', async (ctx: Koa.Context) => {
       content = ['> What have you got to say?  ']
       break
     case 'addpost':
-      ({ content, type } = await addPost(args.join(' '), ctx))
+      ;({ content, type } = await addPost(args.join(' '), ctx))
       break
+    case 'weather':
+      ;({ content, type } = await getWeather(args[0]))
     default:
       break
   }

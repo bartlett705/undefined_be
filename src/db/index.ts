@@ -10,7 +10,7 @@ export async function getItem(params: {
   TableName: string
 }): Promise<any> {
   return new Promise((res, rej) => {
-    logger.externalCall('params:', JSON.stringify(params, null, 2))
+    logger.debug('dynamoDB params:', JSON.stringify(params, null, 2))
     dynamodb.getItem(params, async (err: any, dbData: any) => {
       if (err) {
         logger.error(err, err.stack)
