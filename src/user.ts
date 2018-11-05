@@ -1,27 +1,44 @@
-import AWS from 'aws-sdk'
 import Koa from 'koa'
-import uuid from 'uuid/v4'
-import { config } from './config'
+import uuidv4 from 'uuid/v4'
+import { dynamodb } from './'
+import { getItem } from './db'
+import { logger } from './logger'
 import { CLIResponse, CLIResponseType } from './models/cli'
-
-const dynamodb = new AWS.DynamoDB({
-  accessKeyId: config.awsID,
-  region: 'us-west-2',
-  secretAccessKey: config.dynamoSecret
-})
+import { User } from './models/user'
+import { generateDefaultError } from './responseUtils/generateDefaultError'
 
 /**
  * Checks for an existing session, and creates one if it does not exist,
  * or the provided name does not match.
  */
-export function authUser(
-  username: string,
+export async function authUser(
+  loginParameter: string,
   ctx: Koa.Context
 ): Promise<CLIResponse> {
+  const user = await getUser(ctx)
+
+  if (!user || user.username !== loginParameter) {
+    logger.debug('Session not found, or session mismatch.')
+    return createUser(loginParameter, ctx)
+  }
+
+  logger.debug('Session found for: ', user.username)
+
+  const type = CLIResponseType.Success
+  const content = [
+    `> Welcome back ${loginParameter} 😊  `,
+    '> Your session is still active:  ',
+    `> ${user.userID}  `
+  ]
+
+  return { type, content }
+}
+
+export async function getUser(ctx: Koa.Context): Promise<User | null> {
   const userID = ctx.cookies.get('userID')
 
   if (!userID) {
-    return createUser(username, ctx)
+    return null
   }
 
   const params = {
@@ -31,37 +48,20 @@ export function authUser(
     TableName: 'UndefinedUsers'
   }
 
-  return new Promise((res, rej) => {
-    dynamodb.getItem(params, async (err: any, data: any) => {
-      if (err) {
-        console.log(err, err.stack)
-        res(generateDefaultError(username))
-      }
+  logger.externalCall('Fetching data for ', userID, ' from dynamo.')
 
-      if (!data.Item || data.Item.Username.S !== username) {
-        res(await createUser(username, ctx))
-      }
-
-      console.log('Returning user', data.Item.Username.S)
-
-      const type = CLIResponseType.Success
-      const content = [
-        `> Welcome back ${username} 😊  `,
-        '> Your session is still active:  ',
-        `> ${userID}  `
-      ]
-
-      res({ type, content })
-    })
-  })
+  const data: any = await getItem(params)
+  const username = data && data.Item.Username.S
+  const createdAt = data && data.Item.CreatedAt.S
+  return { createdAt, username, userID: username && userID }
 }
 
 export function createUser(
   username: string,
   ctx: Koa.Context
 ): Promise<CLIResponse> {
-  console.log('Creating new user for ', username)
-  const newUserID = uuid()
+  logger.info('Creating new user for ', username)
+  const newUserID = uuidv4()
 
   const params = {
     Item: {
@@ -76,11 +76,11 @@ export function createUser(
   return new Promise((res, rej) => {
     dynamodb.putItem(params, (err: any, data: any) => {
       if (err) {
-        console.log(err, err.stack)
+        logger.error(err, err.stack)
         res(generateDefaultError(username))
       }
 
-      console.log('created:', data)
+      logger.externalCall('Created:', data)
       const type = CLIResponseType.Success
       const content = [
         `> 👋 Hello ${username}.  `,
@@ -93,12 +93,3 @@ export function createUser(
     })
   })
 }
-
-const generateDefaultError = (username: string) => ({
-  content: [
-    `> 😭 Sorry ${username}.  `,
-    '> We suck at the Internet...  ',
-    '> Something went wrong.'
-  ],
-  type: CLIResponseType.Error
-})

@@ -1,3 +1,4 @@
+import chalk from 'chalk'
 import Koa from 'koa'
 import { config } from './config'
 import { CLIRequestBody } from './models/cli'
@@ -17,30 +18,36 @@ interface LogData {
   userAgent: string
 }
 
-function outputLog(data: Partial<LogData>, thrownError: any) {
-  if (config.prettyPrint) {
-    let annotation = ''
-    if (data.url === '/' && data.method === 'POST') {
-      annotation = `| "${data.input}" |`
-    }
-    console.log(
-      `${data.statusCode} ${data.method} ${
-        data.url === '/' ? annotation : data.url
-      } - ${data.responseTime}ms`
-    )
-    if (thrownError) {
-      console.error(thrownError)
-    }
-  } else if (data.statusCode < 400) {
-    process.stdout.write(JSON.stringify(data) + '\n')
-  } else {
-    process.stderr.write(JSON.stringify(data) + '\n')
+const error = chalk.bold.red
+const warn = chalk.keyword('orange')
+const info = chalk.blueBright
+const debug = chalk.blue
+const externalCall = chalk.black.bgGreenBright
+
+const noOp = (): void => undefined
+
+class Logger {
+  public error: (...args: any) => void
+  public warn: (...args: any) => void
+  public info: (...args: any) => void
+  public debug: (...args: any) => void
+  public externalCall: (...args: any) => void
+
+  private logLevel: number
+  constructor(logLevel: number) {
+    this.logLevel = logLevel
+    this.error = (...args: any) => console.log(error(...args))
+    this.warn = logLevel > 0 ? (...args: any) => console.log(warn(...args)) : noOp
+    this.info = logLevel > 1 ? (...args: any) => console.log(info(...args)) : noOp
+    this.debug = logLevel > 2 ? (...args: any) => console.log(debug(...args)) : noOp
+    this.externalCall = logLevel > 2 ? (...args: any) => console.log(externalCall(...args)) : noOp
   }
 }
 
-export async function logger(ctx: Koa.Context, next: () => Promise<any>) {
+export const logger = new Logger(config.logLevel)
+
+export async function requestLoggerMiddleware(ctx: Koa.Context, next: () => Promise<any>) {
   const start = new Date().getMilliseconds()
-  console.warn(ctx.response.headers)
   const logData: Partial<LogData> = {
     host: ctx.headers.host,
     input:
@@ -73,5 +80,26 @@ export async function logger(ctx: Koa.Context, next: () => Promise<any>) {
 
   if (errorThrown) {
     throw errorThrown
+  }
+}
+
+function outputLog(data: Partial<LogData>, thrownError: any) {
+  if (config.prettyPrint) {
+    let annotation = ''
+    if (data.url === '/' && data.method === 'POST') {
+      annotation = `| "${data.input}" |`
+    }
+    console.log(
+      `${data.statusCode} ${data.method} ${
+        data.url === '/' ? annotation : data.url
+      } - ${data.responseTime}ms`
+    )
+    if (thrownError) {
+      console.error(thrownError)
+    }
+  } else if (data.statusCode < 400) {
+    process.stdout.write(JSON.stringify(data) + '\n')
+  } else {
+    process.stderr.write(JSON.stringify(data) + '\n')
   }
 }

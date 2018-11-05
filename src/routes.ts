@@ -1,8 +1,8 @@
 import Koa from 'koa'
 import Router from 'koa-router'
-import { config } from './config'
+import { addPost } from './messages'
 import { CLIRequestBody, CLIResponse, CLIResponseType } from './models/cli'
-import { authUser } from './user'
+import { authUser, getUser } from './user'
 
 const router = new Router()
 
@@ -51,7 +51,34 @@ router.post('/', async (ctx: Koa.Context) => {
         ({ type, content } = await authUser(username, ctx))
       }
       break
+    case 'logout':
+      const userID = ctx.cookies.get('userID')
+      if (!userID) {
+        type = CLIResponseType.Info
+        content = ["🖖 Looks like you weren't logged in ¯_(ツ)_/¯  "]
+        break
+      }
+
+      type = CLIResponseType.Info
+      content = ['Okay, see ya later 🖖  ']
+      ctx.cookies.set('userID')
+      break
+    case 'post':
+      const user = await getUser(ctx)
+      if (!user) {
+        (content = ['You must be logged in to post.  ']),
+          (type = CLIResponseType.Error)
+        break
+      }
+
+      type = CLIResponseType.StartPost
+      content = ['> What have you got to say?  ']
+      break
+    case 'addpost':
+      ({ content, type } = await addPost(args.join(' '), ctx))
+      break
     default:
+      break
   }
 
   response.body = JSON.stringify({ content, type })

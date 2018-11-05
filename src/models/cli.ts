@@ -2,6 +2,7 @@ export enum CLIResponseType {
   Error = 'ERROR',
   Info = 'INFO',
   Standard = 'STANDARD',
+  StartPost = 'POST',
   Success = 'SUCCESS'
 }
 

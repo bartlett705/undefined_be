@@ -25,6 +25,7 @@ export const config = {
   awsID: process.env.AWS_ACCESS_KEY_ID,
   buildType,
   dynamoSecret: process.env.DYNAMO_SECRET,
+  logLevel: 4,
   port: process.env.PORT || 7331,
   prettyPrint: true
 }
