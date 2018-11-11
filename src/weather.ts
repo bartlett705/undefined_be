@@ -1,10 +1,10 @@
 import fetch from 'node-fetch'
 import { config } from './config'
-import { logger } from './logger'
+import { Logger } from './logger'
 import { CLIResponseType } from './models/cli'
 import { generateDefaultError } from './responseUtils/generateDefaultError'
 
-export async function getWeather(zip: string) {
+export async function getWeather(logger: Logger, zip: string) {
   try {
     const res = await fetch(
       `https://api.apixu.com/v1/forecast.json?key=${
@@ -14,7 +14,8 @@ export async function getWeather(zip: string) {
 
     const body = await res.json()
 
-    logger.info(JSON.stringify(body))
+    logger.debug('Got a weather response:', res.status)
+
     const { location, current, forecast } = body
     const { day, astro } = forecast.forecastday[0]
     const content = [

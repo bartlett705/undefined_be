@@ -2,7 +2,7 @@ import Koa from 'koa'
 import uuidv4 from 'uuid/v4'
 import { dynamodb } from './'
 import { getItem } from './db'
-import { logger } from './logger'
+import { Logger } from './logger'
 import { CLIResponse, CLIResponseType } from './models/cli'
 import { User } from './models/user'
 import { generateDefaultError } from './responseUtils/generateDefaultError'
@@ -12,14 +12,15 @@ import { generateDefaultError } from './responseUtils/generateDefaultError'
  * or the provided name does not match.
  */
 export async function authUser(
-  loginParameter: string,
-  ctx: Koa.Context
+  ctx: Koa.Context,
+  logger: Logger,
+  loginParameter: string
 ): Promise<CLIResponse> {
-  const user = await getUser(ctx)
+  const user = await getUser(ctx, logger)
 
   if (!user || user.username !== loginParameter) {
     logger.debug('Session not found, or session mismatch.')
-    return createUser(loginParameter, ctx)
+    return createUser(ctx, logger, loginParameter)
   }
 
   logger.debug('Session found for: ', user.username)
@@ -34,7 +35,10 @@ export async function authUser(
   return { type, content }
 }
 
-export async function getUser(ctx: Koa.Context): Promise<User | null> {
+export async function getUser(
+  ctx: Koa.Context,
+  logger: Logger
+): Promise<User | null> {
   const userID = ctx.cookies.get('userID')
 
   if (!userID) {
@@ -50,15 +54,16 @@ export async function getUser(ctx: Koa.Context): Promise<User | null> {
 
   logger.externalCall('Fetching data for ', userID, ' from dynamo.')
 
-  const data: any = await getItem(params)
+  const data: any = await getItem(logger, params)
   const username = data && data.Item.Username.S
   const createdAt = data && data.Item.CreatedAt.S
   return { createdAt, username, userID: username && userID }
 }
 
 export function createUser(
-  username: string,
-  ctx: Koa.Context
+  ctx: Koa.Context,
+  logger: Logger,
+  username: string
 ): Promise<CLIResponse> {
   logger.info('Creating new user for ', username)
   const newUserID = uuidv4()
@@ -80,7 +85,7 @@ export function createUser(
         res(generateDefaultError(username))
       }
 
-      logger.externalCall('Created:', data)
+      logger.externalCall('Created:', JSON.stringify(data))
       const type = CLIResponseType.Success
       const content = [
         `> 👋 Hello ${username}.  `,

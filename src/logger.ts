@@ -21,12 +21,12 @@ interface LogData {
 const error = chalk.bold.red
 const warn = chalk.keyword('orange')
 const info = chalk.blueBright
-const debug = chalk.blue
+const debug = chalk.white
 const externalCall = chalk.black.bgGreenBright
 
 const noOp = (): void => undefined
 
-class Logger {
+export class Logger {
   public error: (...args: any) => void
   public warn: (...args: any) => void
   public info: (...args: any) => void
@@ -37,16 +37,22 @@ class Logger {
   constructor(logLevel: number) {
     this.logLevel = logLevel
     this.error = (...args: any) => console.log(error(...args))
-    this.warn = logLevel > 0 ? (...args: any) => console.log(warn(...args)) : noOp
-    this.info = logLevel > 1 ? (...args: any) => console.log(info(...args)) : noOp
-    this.debug = logLevel > 2 ? (...args: any) => console.log(debug(...args)) : noOp
-    this.externalCall = logLevel > 2 ? (...args: any) => console.log(externalCall(...args)) : noOp
+    this.warn =
+      logLevel > 0 ? (...args: any) => console.log(warn(...args)) : noOp
+    this.info =
+      logLevel > 1 ? (...args: any) => console.log(info(...args)) : noOp
+    this.debug =
+      logLevel > 2 ? (...args: any) => console.log(debug(...args)) : noOp
+    this.externalCall =
+      logLevel > 2 ? (...args: any) => console.log(externalCall(...args)) : noOp
   }
 }
 
-export const logger = new Logger(config.logLevel)
-
-export async function requestLoggerMiddleware(ctx: Koa.Context, next: () => Promise<any>) {
+export const requestLoggerMiddleware = (logger: Logger) => async (
+  ctx: Koa.Context,
+  next: () => Promise<any>
+) => {
+  ctx.state.logger = logger
   const start = new Date().getMilliseconds()
   const logData: Partial<LogData> = {
     host: ctx.headers.host,
@@ -76,26 +82,26 @@ export async function requestLoggerMiddleware(ctx: Koa.Context, next: () => Prom
   }
 
   logData.responseTime = new Date().getMilliseconds() - start
-  outputLog(logData, errorThrown)
+  outputLog(logger, logData, errorThrown)
 
   if (errorThrown) {
     throw errorThrown
   }
 }
 
-function outputLog(data: Partial<LogData>, thrownError: any) {
+function outputLog(logger: Logger, data: Partial<LogData>, thrownError: any) {
   if (config.prettyPrint) {
     let annotation = ''
     if (data.url === '/' && data.method === 'POST') {
       annotation = `| "${data.input}" |`
     }
-    console.log(
+    logger.info(
       `${data.statusCode} ${data.method} ${
         data.url === '/' ? annotation : data.url
       } - ${data.responseTime}ms`
     )
     if (thrownError) {
-      console.error(thrownError)
+      logger.error(thrownError)
     }
   } else if (data.statusCode < 400) {
     process.stdout.write(JSON.stringify(data) + '\n')

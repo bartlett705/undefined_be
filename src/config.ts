@@ -8,12 +8,13 @@ export enum BuildType {
 }
 
 function getBuildType(env: NodeJS.ProcessEnv) {
-  switch (env.buildType) {
+  switch (env.BUILD_TYPE) {
     case 'prod':
       return BuildType.Production
     case 'dev':
       return BuildType.Development
     case 'test':
+    default:
       return BuildType.Test
   }
 }
@@ -25,6 +26,7 @@ export const config = {
   awsID: process.env.AWS_ACCESS_KEY_ID,
   buildType,
   dynamoSecret: process.env.DYNAMO_SECRET,
+  dynamoTableSuffix: buildType === BuildType.Production ? '' : '__x',
   logLevel: 4,
   port: process.env.PORT || 7331,
   prettyPrint: true,

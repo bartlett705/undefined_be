@@ -1,14 +1,20 @@
+import Koa from 'koa'
 import { dynamodb } from '..'
-import { logger } from '../logger'
-export async function getItem(params: {
-  Key: Record<
-    string,
-    {
-      S: string
-    }
-  >
-  TableName: string
-}): Promise<any> {
+import { config } from '../config'
+import { Logger } from '../logger'
+
+export async function getItem(
+  logger: Logger,
+  params: {
+    Key: Record<
+      string,
+      {
+        S: string
+      }
+    >
+    TableName: string
+  }
+): Promise<any> {
   return new Promise((res, rej) => {
     logger.debug('dynamoDB params:', JSON.stringify(params, null, 2))
     dynamodb.getItem(params, async (err: any, dbData: any) => {
@@ -20,3 +26,5 @@ export async function getItem(params: {
     })
   })
 }
+
+export const tableName = (s: string) => `${s}${config.dynamoTableSuffix}`

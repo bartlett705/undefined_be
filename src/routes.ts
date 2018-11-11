@@ -1,15 +1,19 @@
 import Koa from 'koa'
 import Router from 'koa-router'
-import { addPost } from './messages'
+import { Logger } from './logger'
+import { addPost, getPosts } from './messages'
 import { CLIRequestBody, CLIResponse, CLIResponseType } from './models/cli'
 import { authUser, getUser } from './user'
 import { getWeather } from './weather'
 
 const router = new Router()
-
-router.get('/', (ctx: Koa.Context) => console.log('foo'))
+console.log('router')
+router.get('/', (ctx: Koa.Context) =>
+  ctx.state.logger.warn('!random getter detected!')
+)
 
 router.post('/', async (ctx: Koa.Context) => {
+  const logger = ctx.state.logger as Logger
   const { body } = ctx.request
   const { response } = ctx
 
@@ -29,7 +33,10 @@ router.post('/', async (ctx: Koa.Context) => {
 
   let content: CLIResponse['content'] = ['> Wat?  \n']
   let type: CLIResponse['type'] = CLIResponseType.Info
+  let payload: CLIResponse['payload']
+
   const [command, ...args] = input.split(' ')
+  const userID = ctx.cookies.get('userID')
 
   switch (command.toLowerCase()) {
     case 'help':
@@ -48,11 +55,10 @@ router.post('/', async (ctx: Koa.Context) => {
         type = CLIResponseType.Success
         content = ['> Hey dude!  ']
       } else {
-        ({ type, content } = await authUser(username, ctx))
+        ({ type, content } = await authUser(ctx, logger, username))
       }
       break
     case 'logout':
-      const userID = ctx.cookies.get('userID')
       if (!userID) {
         type = CLIResponseType.Info
         content = ["🖖 Looks like you weren't logged in ¯_(ツ)_/¯  "]
@@ -64,8 +70,7 @@ router.post('/', async (ctx: Koa.Context) => {
       ctx.cookies.set('userID')
       break
     case 'post':
-      const user = await getUser(ctx)
-      if (!user) {
+      if (!userID) {
         (content = ['You must be logged in to post.  ']),
           (type = CLIResponseType.Error)
         break
@@ -74,16 +79,19 @@ router.post('/', async (ctx: Koa.Context) => {
       type = CLIResponseType.StartPost
       content = ['> What have you got to say?  ']
       break
+    case 'read':
+      ({ content, payload, type } = await getPosts(ctx, logger))
+      break
     case 'addpost':
-      ({ content, type } = await addPost(args.join(' '), ctx))
+      ({ content, type } = await addPost(ctx, logger, args.join(' ')))
       break
     case 'weather':
-      ({ content, type } = await getWeather(args[0]))
+      ({ content, type } = await getWeather(logger, args[0]))
     default:
       break
   }
 
-  response.body = JSON.stringify({ content, type })
+  response.body = JSON.stringify({ content, payload, type })
 })
 
 export const routes = router.routes()
