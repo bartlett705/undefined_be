@@ -7,10 +7,15 @@ import { authUser, getUser } from './user'
 import { getWeather } from './weather'
 
 const router = new Router()
-console.log('router')
 router.get('/', (ctx: Koa.Context) =>
   ctx.state.logger.warn('!random getter detected!')
 )
+
+router.get('/healthcheck', (ctx: Koa.Context) => {
+  ctx.status = 223
+  ctx.body = 'pongHi'
+  return
+})
 
 router.post('/', async (ctx: Koa.Context) => {
   const logger = ctx.state.logger as Logger

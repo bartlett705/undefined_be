@@ -3,6 +3,7 @@ import AWS from 'aws-sdk'
 import chalk from 'chalk'
 import Koa from 'koa'
 import bodyParser from 'koa-bodyparser'
+import statuses from 'statuses'
 import { BuildType, config } from './config'
 import { Logger, requestLoggerMiddleware } from './logger'
 import { routes } from './routes'
@@ -16,6 +17,11 @@ export const dynamodb = new AWS.DynamoDB({
 })
 
 const app = new Koa()
+
+// The meanies at KOA won't let us use non-standard http codes without this hack.
+statuses[223] = 'Alive'
+statuses.codes.push(223)
+statuses.Alive = 223
 
 app.use(
   bodyParser({
