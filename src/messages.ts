@@ -99,12 +99,19 @@ export async function getPosts(
       logger.info(
         `Returning ${data.Count} posts to ${formatName(userID, username)}`
       )
-      const posts: Post[] = (data.Items as DynamoPost[]).map((item) => ({
-        createdAt: item.CreatedAt.S,
-        message: item.Message.S,
-        userID: item.UserID.S,
-        username: item.UserName.S
-      }))
+      const posts: Post[] = (data.Items as DynamoPost[])
+        .map((item) => ({
+          createdAt: item.CreatedAt.S,
+          message: item.Message.S,
+          userID: item.UserID.S,
+          username: item.UserName.S
+        }))
+        // 🙈 post-db sorting because we're using noSQL 🙈
+        .sort(
+          (postA, postB) =>
+            new Date(postB.createdAt).getTime() -
+            new Date(postA.createdAt).getTime()
+        )
 
       const type = CLIResponseType.Info
       const content = [
