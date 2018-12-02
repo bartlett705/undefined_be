@@ -37,7 +37,9 @@
   },
   "scripts": {
     "test": "jest",
-    "start": "PORT=3003 forever --watch -m 5 -o ../undefined_be.test.log --append -c \"ts-node\" src/index.ts --colors",
+    "deploy:config": "scpp src/config.ts ahmad@mosey.systems:/home/ahmad/src/undefined_be/src/config.ts",
+    "deploy:nginx": "scpp nginx.conf ahmad@mosey.systems:/etc/nginx/nginx.conf",
+    "start": "forever --watch -m 5 -o ../undefined_be.test.log --append -c \"ts-node\" src/index.ts --colors",
     "start:production": "BUILD_TYPE=prod forever --watch -m 5 -o ../undefined_be.prod.log --append -c \"ts-node\" src/index.ts --colors",
     "start:nodemon": "npm i && nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.test.ts' --exec 'ts-node' src/index.ts"
   },

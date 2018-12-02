@@ -28,7 +28,7 @@ export const config = {
   dynamoSecret: process.env.DYNAMO_SECRET,
   dynamoTableSuffix: buildType === BuildType.Production ? '' : '__x',
   logLevel: 4,
-  port: process.env.PORT || 7331,
+  port: buildType === BuildType.Production ? 7331 : 7337,
   prettyPrint: true,
   weatherAPIKey: process.env.WEATHER_API_KEY
 }
