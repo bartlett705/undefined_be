@@ -1,5 +1,6 @@
 import Koa from 'koa'
 import Router from 'koa-router'
+import statuses from 'statuses'
 import { Logger } from './logger'
 import { addPost, getPosts } from './messages'
 import { CLIRequestBody, CLIResponse, CLIResponseType } from './models/cli'
@@ -12,7 +13,7 @@ router.get('/', (ctx: Koa.Context) =>
 )
 
 router.get('/healthcheck', (ctx: Koa.Context) => {
-  ctx.status = 223
+  ctx.status = 200
   ctx.body = 'pongHi'
   return
 })
