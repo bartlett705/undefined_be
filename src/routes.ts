@@ -1,12 +1,16 @@
 import Koa from 'koa'
 import Router from 'koa-router'
-import statuses from 'statuses'
+import { Discord } from './discord'
 import { Logger } from './logger'
 import { addPost, getPosts } from './messages'
 import { CLIRequestBody, CLIResponse, CLIResponseType } from './models/cli'
-import { authUser, getUser } from './user'
+import { authUser } from './user'
 import { getWeather } from './weather'
 
+const discord = new Discord(
+  'zAzr0RrAQJaxIQPGTv2upomPckrv-fIHPSVXXK-SU59njoFrfgiBTrFrLBwkoMzvelhD',
+  '540041433827246081'
+)
 const router = new Router()
 router.get('/', (ctx: Koa.Context) =>
   ctx.state.logger.warn('!random getter detected!')
@@ -44,6 +48,7 @@ router.post('/', async (ctx: Koa.Context) => {
   const [command, ...args] = input.split(' ')
   const userID = ctx.cookies.get('userID')
 
+  discord.postMessage({ content: `${userID} said "${input}"` })
   switch (command.toLowerCase()) {
     case 'help':
       type = CLIResponseType.Info
