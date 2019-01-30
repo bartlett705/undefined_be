@@ -1,5 +1,6 @@
 import Koa from 'koa'
 import Router from 'koa-router'
+import { BuildType, config } from './config'
 import { Discord } from './discord'
 import { Logger } from './logger'
 import { addPost, getPosts } from './messages'
@@ -48,7 +49,12 @@ router.post('/', async (ctx: Koa.Context) => {
   const [command, ...args] = input.split(' ')
   const userID = ctx.cookies.get('userID')
 
-  discord.postMessage({ content: `${userID} said "${input}"` })
+  if (config.buildType === BuildType.Production) {
+    discord.postMessage({
+      content: `${userID && userID.split('-')[4]} said "${input}"`
+    })
+  }
+
   switch (command.toLowerCase()) {
     case 'help':
       type = CLIResponseType.Info
