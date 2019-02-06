@@ -62,7 +62,9 @@ export const requestLoggerMiddleware = (logger: Logger) => async (
       (ctx.request.body as CLIRequestBody).input,
     method: ctx.method,
     query: ctx.query,
-    remoteAddress: ctx.request.ip,
+    remoteAddress: ctx.request.ips.length
+      ? JSON.stringify(ctx.request.ips)
+      : ctx.request.ip,
     url: ctx.url,
     userAgent: ctx.headers['user-agent']
   }

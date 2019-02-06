@@ -16,6 +16,7 @@ export const dynamodb = new AWS.DynamoDB({
 })
 
 const app = new Koa()
+app.proxy = true
 
 app.use(
   bodyParser({
