@@ -13,9 +13,9 @@ export async function getWeather(
   if (Number.isNaN(zip) || zip < 10000 || zip > 99999) {
     return {
       content: [
-        "That doesn't look like a zip code...",
-        'Usage: weather [5-digit zip]',
-        'ex: weather 92672 '
+        "That doesn't look like a zip code...  ",
+        'Usage: weather [5-digit zip]  ',
+        'ex: weather 92672  '
       ],
       type: CLIResponseType.Standard
     }
