@@ -57,6 +57,7 @@ export async function getUser(
   const data: any = await getItem(logger, params)
   const username = data && data.Item.Username.S
   const createdAt = data && data.Item.CreatedAt.S
+  ctx.state.username = username
   return { createdAt, username, userID: username && userID }
 }
 
