@@ -7,7 +7,6 @@ interface LogData {
   data: any
   errorMessage: string
   errorStack: string
-  host: string
   input: string
   method: string
   query: string
@@ -56,13 +55,11 @@ export const requestLoggerMiddleware = (logger: Logger) => async (
   ctx.state.logger = logger
   const start = new Date().getMilliseconds()
   const logData: Partial<LogData> = {
-    host: ctx.headers.host,
     input:
       ctx.method === 'POST' &&
       ctx.request.body &&
       (ctx.request.body as CLIRequestBody).input,
     method: ctx.method,
-    query: ctx.query,
     remoteAddress: ctx.request.ips.length ? ctx.request.ips : ctx.request.ip,
     time: new Date().toISOString(),
     url: ctx.url,
