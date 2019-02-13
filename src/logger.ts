@@ -16,6 +16,7 @@ interface LogData {
   time: string
   url: string
   userAgent: string
+  userID: string | undefined
 }
 
 const error = chalk.bold.red
@@ -70,6 +71,7 @@ export const requestLoggerMiddleware = (logger: Logger) => async (
   try {
     await next()
     logData.statusCode = ctx.status
+    logData.userID = ctx.state.userID
   } catch (e) {
     errorThrown = e
     logData.errorMessage = e.message

@@ -48,6 +48,7 @@ router.post('/', async (ctx: Koa.Context) => {
 
   const [command, ...args] = input.split(' ')
   const userID = ctx.cookies.get('userID')
+  ctx.state.userID = userID
 
   if (config.buildType === BuildType.Production) {
     discord.postMessage({
