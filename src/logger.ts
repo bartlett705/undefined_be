@@ -14,6 +14,7 @@ interface LogData {
   remoteAddress: string | string[]
   responseTime: number
   statusCode: number
+  time: string
   url: string
   userAgent: string
 }
@@ -63,6 +64,7 @@ export const requestLoggerMiddleware = (logger: Logger) => async (
     method: ctx.method,
     query: ctx.query,
     remoteAddress: ctx.request.ips.length ? ctx.request.ips : ctx.request.ip,
+    time: new Date().toISOString(),
     url: ctx.url,
     userAgent: ctx.headers['user-agent']
   }
