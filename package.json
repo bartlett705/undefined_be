@@ -2,7 +2,7 @@
   "name": "undefined_be",
   "version": "0.0.1",
   "description": "deploy agent for github integration",
-  "main": "src/index.js",
+  "main": "build/index.js",
   "dependencies": {
     "@koa/cors": "^2.2.2",
     "aws-sdk": "^2.344.0",
@@ -32,10 +32,11 @@
   },
   "scripts": {
     "test": "jest",
-    "deploy:config": "scpp src/config.ts ahmad@mosey.systems:/home/ahmad/src/undefined_be/src/config.ts",
+    "build": "tsc",
     "deploy:nginx": "scpp nginx.conf ahmad@mosey.systems:/etc/nginx/nginx.conf",
     "start": "forever --watch -m 5 -o ../undefined_be.test.log --append -c \"ts-node\" src/index.ts --colors",
-    "start:production": "npm i && BUILD_TYPE=prod forever --watch -m 5 -o ../undefined_be.prod.log --append -c \"ts-node\" src/index.ts --colors",
+    "start:production:tsnode": "npm i && BUILD_TYPE=prod forever --watch -m 5 -o ../undefined_be.prod.log --append -c \"ts-node\" src/index.ts --colors",
+    "start:production": "npm run build && BUILD_TYPE=prod forever --watch -m 5 -o ../undefined_be.prod.log --append build/index.js --colors",
     "start:nodemon": "npm i && nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.test.ts' --exec 'ts-node' src/index.ts"
   },
   "repository": {
