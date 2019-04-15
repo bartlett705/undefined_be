@@ -18,7 +18,8 @@ import { getUser } from './user'
 export async function addPost(
   ctx: Koa.Context,
   logger: Logger,
-  message: string
+  message: string,
+  staging: boolean,
 ): Promise<CLIResponse> {
   const user = await getUser(ctx, logger)
   if (!user) {
@@ -40,14 +41,14 @@ export async function addPost(
   const params = {
     Item: post,
     ReturnConsumedCapacity: 'TOTAL',
-    TableName: tableName('UndefinedPosts')
+    TableName: tableName('UndefinedPosts', staging)
   }
 
   logger.debug(
     'adding post:',
     JSON.stringify(post),
     ' to table ',
-    tableName('UndefinedPosts')
+    tableName('UndefinedPosts', staging)
   )
 
   return new Promise<CLIResponse>((res, rej) => {
@@ -69,7 +70,7 @@ export async function addPost(
 export async function getPosts(
   ctx: Koa.Context,
   logger: Logger,
-  after?: string
+  staging: boolean,
 ): Promise<CLIResponse> {
   const user = await getUser(ctx, logger)
   if (!user) {
@@ -84,7 +85,7 @@ export async function getPosts(
   const params = {
     Limit: 25,
     ReturnConsumedCapacity: 'TOTAL',
-    TableName: tableName('UndefinedPosts')
+    TableName: tableName('UndefinedPosts', staging)
   }
 
   return new Promise<CLIResponse>((res, rej) => {

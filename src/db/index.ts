@@ -1,6 +1,5 @@
 import Koa from 'koa'
 import { dynamodb } from '..'
-import { config } from '../config'
 import { Logger } from '../logger'
 
 export async function getItem(
@@ -27,4 +26,5 @@ export async function getItem(
   })
 }
 
-export const tableName = (s: string) => `${s}${config.dynamoTableSuffix}`
+export const tableName = (s: string, staging: boolean) =>
+  `${s}${staging ? '__x' : ''}`
