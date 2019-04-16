@@ -26,7 +26,6 @@ export const config = {
   awsID: process.env.AWS_ACCESS_KEY_ID,
   buildType,
   dynamoSecret: process.env.DYNAMO_SECRET,
-  dynamoTableSuffix: buildType === BuildType.Production ? '' : '__x',
   logLevel: buildType === BuildType.Production ? 0 : 4,
   port: buildType === BuildType.Production ? 7331 : 7337,
   prettyPrint: buildType !== BuildType.Production,
