@@ -23,27 +23,23 @@ export async function getWeather(
 
   try {
     const res = await fetch(
-      `https://api.apixu.com/v1/forecast.json?key=${
-        config.weatherAPIKey
-      }&q=${zip}`
+      `http://api.weatherstack.com/forecast?access_key=${config.weatherAPIKey}&query=${zip}&units=f`
     )
 
     const body = await res.json()
 
-    logger.debug('Got a weather response:', res.status)
+    logger.debug('Got a weather response:', res)
     if (res.status < 400) {
       const { location, current, forecast } = body
-      const { day, astro } = forecast.forecastday[0]
+      const { mintemp, maxtemp, astro } = forecast[Object.keys(forecast)[0]]
       const content = [
-        `${location.name} | ${location.lat} : ${location.lon} | ${
-          location.localtime
-        }  `,
-        `NOW: ${current.temp_f} F | clouds: ${current.cloud} | Feels like: ${
-          current.feelslike_f
+        `${location.name} | ${location.lat} : ${location.lon} | ${location.localtime}  `,
+        `NOW: ${current.weather_descriptions.join(', ')} ${
+          current.temperature
+        } F | clouds: ${current.cloudcover} | Feels like: ${
+          current.feelslike
         } F `,
-        `TMRW: l ${day.mintemp_f} F | h: ${day.maxtemp_f} F | SR: ${
-          astro.sunrise
-        } | SS: ${astro.sunset}  `
+        `TMRW: l ${mintemp} F | h: ${maxtemp} F | SR: ${astro.sunrise} | SS: ${astro.sunset}  `
       ]
       return { content, type: CLIResponseType.Standard }
     }
