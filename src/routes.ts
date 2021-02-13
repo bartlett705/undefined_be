@@ -42,7 +42,7 @@ function createCLIRoute(staging = false): Router.IMiddleware {
       return
     }
     response.status = 200
-    let content: CLIResponse['content'] = ["> Wat?  \n> Maybe try 'help'."]
+    let content: CLIResponse['content'] = ['> Wat?  ', "> Maybe try 'help'."]
     let type: CLIResponse['type'] = CLIResponseType.Info
     let payload: CLIResponse['payload']
     const [command, ...args] = input.split(' ')
@@ -65,7 +65,10 @@ function createCLIRoute(staging = false): Router.IMiddleware {
         const username = args[0]
         if (!username) {
           type = CLIResponseType.Error
-          content = ['> Might help to tell me who you are... ']
+          content = [
+            '> Might help to tell me who you are...  ',
+            "Try 'login <name>'   ",
+          ]
         } else if (username === 'ahmad') {
           type = CLIResponseType.Success
           content = ['> Hey dude!  ']
