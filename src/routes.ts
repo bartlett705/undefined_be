@@ -42,7 +42,7 @@ function createCLIRoute(staging = false): Router.IMiddleware {
       return
     }
     response.status = 200
-    let content: CLIResponse['content'] = ['> Wat?  \n']
+    let content: CLIResponse['content'] = ["> Wat?  \n> Maybe try 'help'."]
     let type: CLIResponse['type'] = CLIResponseType.Info
     let payload: CLIResponse['payload']
     const [command, ...args] = input.split(' ')
@@ -50,7 +50,7 @@ function createCLIRoute(staging = false): Router.IMiddleware {
     ctx.state.userID = userID
     if (config.buildType === BuildType.Production && !staging) {
       discord.postMessage({
-        content: `${userID && userID.split('-')[4]} said "${input}"`
+        content: `${userID && userID.split('-')[4]} said "${input}"`,
       })
     }
     switch (command.toLowerCase()) {
@@ -58,7 +58,7 @@ function createCLIRoute(staging = false): Router.IMiddleware {
         type = CLIResponseType.Info
         content = [
           '-= PUBLICLY AVAILABLE COMMANDS =-  ',
-          '  [ log(in|out) read post weather cv ]  '
+          '  [ log(in|out) read post weather cv ]  ',
         ]
         break
       case 'login':
@@ -70,7 +70,7 @@ function createCLIRoute(staging = false): Router.IMiddleware {
           type = CLIResponseType.Success
           content = ['> Hey dude!  ']
         } else {
-          ({ type, content } = await authUser(ctx, logger, username))
+          ;({ type, content } = await authUser(ctx, logger, username))
         }
         break
       case 'logout':
@@ -85,21 +85,30 @@ function createCLIRoute(staging = false): Router.IMiddleware {
         break
       case 'post':
         if (!userID) {
-          (content = ['You must be logged in to post.  ']),
-            (type = CLIResponseType.Error)
+          content = ['You must be logged in to post.  ']
+          type = CLIResponseType.Error
           break
         }
         type = CLIResponseType.StartPost
         content = ['> What have you got to say?  ']
         break
       case 'read':
-        ({ content, payload, type } = await getPosts(ctx, logger, staging))
+        ;({ content, payload, type } = await getPosts(ctx, logger, staging))
         break
       case 'addpost':
-        ({ content, type } = await addPost(ctx, logger, args.join(' '), staging))
+        ;({ content, type } = await addPost(
+          ctx,
+          logger,
+          args.join(' '),
+          staging
+        ))
         break
       case 'weather':
-        ({ content, type } = await getWeather(logger, args[0]))
+        ;({ content, type } = await getWeather(logger, args[0]))
+        break
+      case 'cv':
+        type = CLIResponseType.Success
+        content = ['> Sorry to send you to LinkedIn...']
       default:
         break
     }
