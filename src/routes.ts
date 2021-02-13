@@ -42,7 +42,7 @@ function createCLIRoute(staging = false): Router.IMiddleware {
       return
     }
     response.status = 200
-    let content: CLIResponse['content'] = ['> Wat?  ', "> Maybe try 'help'."]
+    let content: CLIResponse['content'] = ['> Wat?  ', "> Maybe try 'help'  "]
     let type: CLIResponse['type'] = CLIResponseType.Info
     let payload: CLIResponse['payload']
     const [command, ...args] = input.split(' ')
