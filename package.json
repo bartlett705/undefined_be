@@ -6,7 +6,7 @@
   "dependencies": {
     "@koa/cors": "^2.2.2",
     "@types/node": "^12.12.7",
-    "aws-sdk": "^2.344.0",
+    "aws-sdk": "^2.814.0",
     "chalk": "^2.4.1",
     "dotenv": "^7.0.0",
     "forever": "^1.0.0",
